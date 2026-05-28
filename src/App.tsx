@@ -76,6 +76,725 @@ export const DigiGloryHubIcon = ({ className = "w-8 h-8", color = "#007BFF" }: {
   </svg>
 );
 
+// ==========================================
+// CLIENT-SIDE LOCAL PERSISTENT DATABASE FALLBACK FOR STATIC DEPLOYMENTS (VERCEL, ETC.)
+// ==========================================
+const LOCAL_DB_KEY = "respect_meter_local_db";
+
+const initialClasses = [
+  { id: "VII_A", name: "VII A", waliKelasName: "Bu Rina", pointKebersihan: 945, pointPerilaku: 1250 },
+  { id: "VIII_A", name: "VIII A", waliKelasName: "Pak Andi", pointKebersihan: 910, pointPerilaku: 1180 },
+  { id: "VIII_B", name: "VIII B", waliKelasName: "Pak Bambang", pointKebersihan: 875, pointPerilaku: 1110 },
+  { id: "VIII_C", name: "VIII C", waliKelasName: "Bu Sinta", pointKebersihan: 820, pointPerilaku: 920 },
+  { id: "IX_B", name: "IX B", waliKelasName: "Bu Retno", pointKebersihan: 790, pointPerilaku: 1020 }
+];
+
+const initialUsers = [
+  {
+    id: "siswa_1",
+    username: "aurelia",
+    password: "123",
+    name: "Aurelia Putri",
+    role: "siswa" as const,
+    kelasId: "VII_A",
+    pointSopan: 320,
+    pointBersih: 150,
+    badges: ["Sopan Santun", "Kelas Bersih", "Peduli Teman", "Disiplin"],
+    bio: "Berusaha menjadi pribadi yang lebih baik setiap hari.",
+    apresiasiDiterima: 12,
+    avatarEmoji: "✨",
+    avatarColor: "indigo"
+  },
+  {
+    id: "siswa_2",
+    username: "fauzi",
+    password: "123",
+    name: "Ahmad Fauzi",
+    role: "siswa" as const,
+    kelasId: "VIII_B",
+    pointSopan: 280,
+    pointBersih: 120,
+    badges: ["Sopan Santun", "Peduli Teman"],
+    bio: "Selalu bersemangat belajar dan senang menolong sesama teman.",
+    apresiasiDiterima: 8,
+    avatarEmoji: "✨",
+    avatarColor: "emerald"
+  },
+  {
+    id: "siswa_3",
+    username: "clara",
+    password: "123",
+    name: "Clara Anastasia",
+    role: "siswa" as const,
+    kelasId: "VIII_A",
+    pointSopan: 340,
+    pointBersih: 140,
+    badges: ["Disiplin", "Sopan Santun"],
+    bio: "Disiplin memulai segalanya menjadi lebih percaya diri.",
+    apresiasiDiterima: 15,
+    avatarEmoji: "✨",
+    avatarColor: "violet"
+  },
+  {
+    id: "guru_1",
+    username: "bk",
+    password: "123",
+    name: "Ibu Hermin, S.Pd.",
+    role: "guru_bk" as const,
+    kelasId: "GURU_BK",
+    pointSopan: 0,
+    pointBersih: 0,
+    badges: [],
+    bio: "Konselor BK Utama Respect Meter Sekolah.",
+    apresiasiDiterima: 0,
+    avatarEmoji: "🎓",
+    avatarColor: "blue"
+  },
+  {
+    id: "wali_1",
+    username: "rina",
+    password: "123",
+    name: "Bu Rina",
+    role: "wali_kelas" as const,
+    kelasId: "VII_A",
+    pointSopan: 0,
+    pointBersih: 0,
+    badges: [],
+    bio: "Wali kelas VII A yang ramah dan disiplin.",
+    apresiasiDiterima: 0,
+    avatarEmoji: "🎓",
+    avatarColor: "amber"
+  },
+  {
+    id: "admin_1",
+    username: "admin",
+    password: "admin",
+    name: "Admin Sekolah",
+    role: "admin" as const,
+    kelasId: "ADMIN",
+    pointSopan: 0,
+    pointBersih: 0,
+    badges: [],
+    bio: "System Administrator Sekolah.",
+    apresiasiDiterima: 0,
+    avatarEmoji: "🛠️",
+    avatarColor: "indigo"
+  }
+];
+
+const initialLogs = [
+  {
+    id: "log_1",
+    studentId: "siswa_1",
+    studentName: "Aurelia Putri",
+    kelasId: "VII_A",
+    type: "apresiasi" as const,
+    points: 20,
+    description: "Mendapat apresiasi dari teman: Membantu guru piket menyapu lobi",
+    date: "12 Mei 2026",
+    giverName: "Ahmad Fauzi",
+    isVerified: true
+  },
+  {
+    id: "log_2",
+    studentId: "siswa_1",
+    studentName: "Aurelia Putri",
+    kelasId: "VII_A",
+    type: "sopan" as const,
+    points: 15,
+    description: "Berbicara sangat sopan dan mengucapkan permisi saat masuk ruang guru",
+    date: "10 Mei 2026",
+    giverName: "Ibu Hermin, S.Pd.",
+    isVerified: true
+  },
+  {
+    id: "log_3",
+    studentId: "siswa_1",
+    studentName: "Aurelia Putri",
+    kelasId: "VII_A",
+    type: "bersih" as const,
+    points: 25,
+    description: "Mengkoordinir pembersihan rutin hingga kelas VII A memenangkan Kelas Terbersih",
+    date: "7 Mei 2026",
+    giverName: "Ibu Hermin, S.Pd.",
+    isVerified: true
+  },
+  {
+    id: "log_4",
+    studentId: "siswa_2",
+    studentName: "Ahmad Fauzi",
+    kelasId: "VIII_B",
+    type: "apresiasi" as const,
+    points: 15,
+    description: "Membantu menyeberangkan siswa berkebutuhan khusus saat pulang sekolah",
+    date: "11 Mei 2026",
+    giverName: "Clara Anastasia",
+    isVerified: false
+  }
+];
+
+const initialEthicGuides = [
+  {
+    id: "ethic_1",
+    title: "Cara Berbicara Sopan Dengan Guru",
+    category: "Sopan" as const,
+    description: "Kesantunan dalam ucapan adalah cerminan kemurnian budi pekerti kita kepada guru sebagai orang tua kedua.",
+    tips: [
+      "Tatap wajah guru dengan pandangan lembut dan tidak menantang.",
+      "Gunakan nada bicara rendah-menengah, serta tidak berbisik atau berteriak.",
+      "Membiasakan 3 Kata Ajaib: Tolong, Permisi, dan Terima Kasih."
+    ]
+  },
+  {
+    id: "ethic_2",
+    title: "Cara Meminta Izin di Kelas",
+    category: "Disiplin" as const,
+    description: "Menghormati kelas yang berjalan menciptakan harmoni belajar yang kondusif bagi semua.",
+    tips: [
+      "Angkat tangan kanan terlebih dahulu sebelum menyampaikan permohonan.",
+      "Tunggu sampai guru melihat atau mengizinkan Anda berbicara.",
+      "Sampaikan izin dengan singkat, padat, dan kepala menunduk tipis."
+    ]
+  },
+  {
+    id: "ethic_3",
+    title: "Sikap Saat Ditegur Guru",
+    category: "Etika" as const,
+    description: "Teguran guru adalah wujud cinta kasih agar kita terhindar dari ketimpangan karakter di masa depan.",
+    tips: [
+      "Dengarkan nasehat tanpa memotong kalimat penjelasan guru.",
+      "Akui kesalahan ksatria jika Anda keliru dan berjanji memperbaiki diri.",
+      "Jaga bahasa tubuh tetap tunduk, tenang, dan tangan tertaut di depan."
+    ]
+  },
+  {
+    id: "ethic_4",
+    title: "Stop Perundungan (Anti-Bullying)",
+    category: "Anti-Bullying" as const,
+    description: "Setiap perkataan atau candaan yang menyakiti fisik, hati, atau mental teman merupakan kegagalan karakter.",
+    tips: [
+      "Pikirkan perasaan teman sebelum mengucapkan candaan berlebih.",
+      "Saling merangkul perbedaan fisik, suku, ras, agama, maupun akademik.",
+      "Berani melaporkan secara rahasia ke ruang BK jika melihat teman dirundung."
+    ]
+  }
+];
+
+const initialRewards = [
+  {
+    id: "rew_1",
+    title: "Voucher Kantin Sehat IDR 20k",
+    pointsCost: 100,
+    description: "Gunakan voucher untuk membeli makanan berat atau minuman bergizi di kantin sekolah.",
+    type: "siswa" as const,
+    stock: 15
+  },
+  {
+    id: "rew_2",
+    title: "Buku Catatan Eksklusif Karakter",
+    pointsCost: 150,
+    description: "Notebook bergaris tebal dengan sampul kulit sintetis bergambar maskot Respect Meter.",
+    type: "siswa" as const,
+    stock: 8
+  },
+  {
+    id: "rew_3",
+    title: "Sertifikat Utama Siswa Karakter BK",
+    pointsCost: 200,
+    description: "Sertifikat resmi bertandatangan Kepala Sekolah dan Guru BK untuk rekam jejak SNMPTN.",
+    type: "siswa" as const,
+    stock: 50
+  },
+  {
+    id: "rew_4",
+    title: "Hak Jam Istirahat Tambahan Kelas (+15 Mins)",
+    pointsCost: 600,
+    description: "Khusus untuk ditukar bersama seluruh siswa sekelas. Memperpanjang waktu bersantai di lobi.",
+    type: "kelas" as const,
+    stock: 5
+  }
+];
+
+const initialReminders = [
+  {
+    id: "rem_1",
+    title: "Hormati Guru, Muliakan Ilmu",
+    text: "Sopan dalam berbicara berarti kita menghargai ilmu yang disampaikan oleh Bapak/Ibu guru.",
+    author: "Ibu Hermin, S.Pd.",
+    date: "Hari Ini"
+  },
+  {
+    id: "rem_2",
+    title: "Kebersihan adalah Iman",
+    text: "Piket kelas bukan beban individu, tapi kepedulian kelompok untuk lingkungan belajar yang bersih.",
+    author: "Sistem Respect",
+    date: "Kemarin"
+  }
+];
+
+const initialQuizzes = [
+  {
+    id: "q_1",
+    question: "Apa tindakan terbaik jika Anda tidak sengaja menyenggol tumpukan buku milik guru di koridor hingga jatuh?",
+    options: [
+      "Pura-pura tidak tahu dan langsung berjalan cepat menghindari keramaian.",
+      "Segera jongkok, meminta maaf dengan tulus, lalu membantu merapikan tumpukannya.",
+      "Menyalahkan murid lain yang berjalan di sebelah Anda sehingga tidak sengaja menolak.",
+      "Menaruh buku kembali tanpa meminta maaf karena guru tersebut bersikap santai."
+    ],
+    correctAnswerIndex: 1,
+    explanation: "Meminta maaf secara tulus dan langsung membereskan tumpukan buku menunjukkan kepedulian, integritas, dan sopan santun utama murid berkarakter luhur.",
+    pointsReward: 15
+  },
+  {
+    id: "q_2",
+    question: "Saat teman sebangku Anda sedang merundung siswa baru karena bentuk giginya yang kurang rapi, apa yang harus Anda lakukan?",
+    options: [
+      "Ikut tertawa keras agar dianggap lucu oleh circle pertemanan lainnya.",
+      "Mendiamkannya saja karena itu bukan urusan pribadi saya.",
+      "Secara tegas memintanya berhenti, lalu mengajak murid baru tersebut mengobrol akrab, dan melapor ke BK.",
+      "Merekam pembicaran tersebut lalu menyebarkannya kembali ke TikTok sebagai konten seru."
+    ],
+    correctAnswerIndex: 2,
+    explanation: "Mencegah perundungan dengan mengajak korban berteman baik dan mengadu ke pihak sekolah (Guru BK) mencerminkan kepahlawanan moral dan kesetiakawanan sosial.",
+    pointsReward: 15
+  }
+];
+
+const getLocalDB = () => {
+  const data = localStorage.getItem(LOCAL_DB_KEY);
+  if (!data) {
+    const initData = {
+      classes: initialClasses,
+      users: initialUsers,
+      logs: initialLogs,
+      ethicGuides: initialEthicGuides,
+      rewards: initialRewards,
+      reminders: initialReminders,
+      quizzes: initialQuizzes
+    };
+    localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(initData));
+    return initData;
+  }
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    const initData = {
+      classes: initialClasses,
+      users: initialUsers,
+      logs: initialLogs,
+      ethicGuides: initialEthicGuides,
+      rewards: initialRewards,
+      reminders: initialReminders,
+      quizzes: initialQuizzes
+    };
+    localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(initData));
+    return initData;
+  }
+};
+
+const saveLocalDB = (db: any) => {
+  localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(db));
+};
+
+const originalFetch = window.fetch;
+
+// Determine if we should force local mock API
+let forceLocalMode = false;
+if (typeof window !== "undefined") {
+  if (
+    window.location.hostname.includes("vercel.app") ||
+    window.location.hostname.includes("github.io") ||
+    window.location.hostname.includes("stackblitz") ||
+    window.location.hostname.includes("netlify")
+  ) {
+    forceLocalMode = true;
+    console.log("Respect Meter: Production Client environment detected. Enabled persistent client-side database fallback.");
+  }
+}
+
+export const safeFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const url = typeof input === "string" ? input : (input instanceof URL ? input.toString() : input.url);
+  
+  // Only intercept /api/ calls
+  if (url.startsWith("/api/")) {
+    if (!forceLocalMode) {
+      try {
+        const response = await originalFetch(input, init);
+        if (response.ok || response.status < 400 || response.status === 401) {
+          return response;
+        }
+      } catch (err) {
+        console.warn("Respect Meter server connection failed. Switching session to persistent localStorage database.");
+        forceLocalMode = true;
+      }
+    }
+    
+    // Process using Local DB fallback (SAME LOGIC AS BEFORE)
+    // ... [OMITTED FOR BREVITY - I MUST INCLUDE THE REST OF THE DB LOGIC HERE]
+    const db = getLocalDB();
+    const headers = { "Content-Type": "application/json" };
+    const createSuccessResponse = (body: any) => new Response(JSON.stringify(body), { status: 200, headers });
+    const createErrorResponse = (msg: string, status = 400) => 
+      new Response(JSON.stringify({ success: false, error: msg, message: msg }), { status, headers });
+
+    // 1. GET /api/data
+    if (url === "/api/data") {
+      return createSuccessResponse(db);
+    }
+
+    // 2. POST /api/login
+    if (url === "/api/login" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const user = db.users.find(
+          (u: any) => u.username.toLowerCase() === body.username.toLowerCase() && String(u.password) === String(body.password)
+        );
+        if (user) {
+          const userClass = db.classes.find((c: any) => c.id === user.kelasId);
+          return createSuccessResponse({
+            success: true,
+            user: {
+              ...user,
+              avatarEmoji: user.avatarEmoji || (user.role === "siswa" ? "✨" : "🎓"),
+              avatarColor: user.avatarColor || "indigo",
+              avatarImage: user.avatarImage || "",
+              className: userClass ? userClass.name : ""
+            }
+          });
+        }
+        return createErrorResponse("Kombinasi Username & Kata Sandi salah.", 401);
+      } catch (e) {
+        return createErrorResponse("Error parsing request.");
+      }
+    }
+
+    // 3. POST /api/profile/update
+    if (url === "/api/profile/update" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const user = db.users.find((u: any) => u.id === body.userId);
+        if (!user) return createErrorResponse("Pengguna tidak ditemukan.", 404);
+
+        if (body.name && body.name.trim()) user.name = body.name.trim();
+        if (body.bio !== undefined) user.bio = body.bio.trim();
+        if (body.password && body.password.trim()) user.password = body.password;
+        if (body.avatarEmoji !== undefined) user.avatarEmoji = body.avatarEmoji;
+        if (body.avatarColor !== undefined) user.avatarColor = body.avatarColor;
+        if (body.avatarImage !== undefined) user.avatarImage = body.avatarImage;
+
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true, user });
+      } catch (e) {
+        return createErrorResponse("Error updating profile.");
+      }
+    }
+
+    // 4. POST /api/points/add
+    if (url === "/api/points/add" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const student = db.users.find((u: any) => u.id === body.studentId);
+        if (!student) return createErrorResponse("Murid tidak ditemukan.", 404);
+
+        const pointValue = Number(body.points);
+        if (body.type === "sopan") {
+          student.pointSopan = Math.max(0, student.pointSopan + pointValue);
+        } else if (body.type === "bersih") {
+          student.pointBersih = Math.max(0, student.pointBersih + pointValue);
+        }
+
+        const studentClass = db.classes.find((c: any) => c.id === student.kelasId);
+        if (studentClass) {
+          if (body.type === "sopan") {
+            studentClass.pointPerilaku = Math.max(0, studentClass.pointPerilaku + pointValue);
+          } else if (body.type === "bersih") {
+            studentClass.pointKebersihan = Math.max(0, studentClass.pointKebersihan + pointValue);
+          }
+        }
+
+        if (body.type === "sopan" && student.pointSopan >= 400 && !student.badges.includes("Bintang Santun")) {
+          student.badges.push("Bintang Santun");
+        }
+        if (body.type === "bersih" && student.pointBersih >= 200 && !student.badges.includes("Pahlawan Kebersihan")) {
+          student.badges.push("Pahlawan Kebersihan");
+        }
+
+        const newLog = {
+          id: `log_${Date.now()}`,
+          studentId: student.id,
+          studentName: student.name,
+          kelasId: student.kelasId,
+          type: body.type,
+          points: pointValue,
+          description: body.description,
+          date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
+          giverName: body.giverName || "Guru BK",
+          isVerified: true
+        };
+
+        db.logs.unshift(newLog);
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true, user: student, log: newLog, class: studentClass });
+      } catch (e) {
+        return createErrorResponse("Error adding points.");
+      }
+    }
+
+    // 5. POST /api/logs/apresiasi
+    if (url === "/api/logs/apresiasi" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const targetStudent = db.users.find((u: any) => u.id === body.targetStudentId);
+        if (!targetStudent) return createErrorResponse("Siswa penerima tidak ditemukan.", 404);
+
+        const newLog = {
+          id: `log_${Date.now()}`,
+          studentId: targetStudent.id,
+          studentName: targetStudent.name,
+          kelasId: targetStudent.kelasId,
+          type: "apresiasi" as const,
+          points: 10,
+          description: `Apresiasi teman: ${body.description}`,
+          date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
+          giverName: body.giverName || "Teman Kelas",
+          isVerified: false
+        };
+
+        db.logs.unshift(newLog);
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true, log: newLog });
+      } catch (e) {
+        return createErrorResponse("Error adding appreciation.");
+      }
+    }
+
+    // 6. POST /api/logs/verify
+    if (url === "/api/logs/verify" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const logIndex = db.logs.findIndex((l: any) => l.id === body.logId);
+        if (logIndex === -1) return createErrorResponse("Log tidak ditemukan.", 404);
+
+        const targetLog = db.logs[logIndex];
+        if (body.isApproved) {
+          targetLog.isVerified = true;
+          const student = db.users.find((u: any) => u.id === targetLog.studentId);
+          if (student) {
+            student.pointSopan += targetLog.points;
+            student.apresiasiDiterima += 1;
+
+            const studentClass = db.classes.find((c: any) => c.id === student.kelasId);
+            if (studentClass) {
+              studentClass.pointPerilaku += targetLog.points;
+            }
+
+            if (student.apresiasiDiterima >= 5 && !student.badges.includes("Sahabat Peduli")) {
+              student.badges.push("Sahabat Peduli");
+            }
+          }
+        } else {
+          db.logs.splice(logIndex, 1);
+        }
+
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true });
+      } catch (e) {
+        return createErrorResponse("Error verifying log.");
+      }
+    }
+
+    // 7. POST /api/classes/add
+    if (url === "/api/classes/add" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const id = body.name.trim().toUpperCase().replace(/\s+/g, "_");
+        if (db.classes.find((c: any) => c.id === id)) {
+          return createErrorResponse(`Kelas dengan kode/nama ${body.name} sudah terdaftar.`);
+        }
+
+        const newClass = {
+          id,
+          name: body.name,
+          waliKelasName: body.waliKelasName,
+          pointKebersihan: 0,
+          pointPerilaku: 0
+        };
+
+        db.classes.push(newClass);
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true, class: newClass });
+      } catch (e) {
+        return createErrorResponse("Error adding class.");
+      }
+    }
+
+    // 8. POST /api/students/add
+    if (url === "/api/students/add" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        if (db.users.find((u: any) => u.username.toLowerCase() === body.username.toLowerCase())) {
+          return createErrorResponse("Username sudah terdaftar di sistem.");
+        }
+
+        const newUser = {
+          id: `user_${Date.now()}_${db.users.length + 1}`,
+          username: body.username.toLowerCase().trim(),
+          password: body.password || "123",
+          name: body.name,
+          role: body.role,
+          kelasId: body.kelasId || "SEKOLAH",
+          pointSopan: body.role === "siswa" ? 100 : 0,
+          pointBersih: body.role === "siswa" ? 50 : 0,
+          badges: body.role === "siswa" ? ["Disiplin"] : [],
+          bio: body.bio || (body.role === "siswa" ? "Berusaha berkarakter terpuji." : "Pendidik sekolah."),
+          apresiasiDiterima: 0,
+          avatarEmoji: body.role === "siswa" ? "✨" : "🎓",
+          avatarColor: "indigo"
+        };
+
+        db.users.push(newUser);
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true, user: newUser });
+      } catch (e) {
+        return createErrorResponse("Error adding user.");
+      }
+    }
+
+    // 9. POST /api/students/delete
+    if (url === "/api/students/delete" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const index = db.users.findIndex((u: any) => u.id === body.id);
+        if (index !== -1) {
+          db.users.splice(index, 1);
+          saveLocalDB(db);
+          return createSuccessResponse({ success: true });
+        }
+        return createErrorResponse("Siswa tidak ditemukan.", 404);
+      } catch (e) {
+        return createErrorResponse("Error deleting user.");
+      }
+    }
+
+    // 10. POST /api/rewards/redeem
+    if (url === "/api/rewards/redeem" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const user = db.users.find((u: any) => u.id === body.userId);
+        const reward = db.rewards.find((r: any) => r.id === body.rewardId);
+
+        if (!user || !reward) return createErrorResponse("User atau Item Reward tidak ditemukan.", 404);
+        if (reward.stock <= 0) return createErrorResponse("Yikes! Stok Item Reward ini sudah habis.", 400);
+
+        const cost = reward.pointsCost;
+        if (reward.type === "siswa") {
+          const totalPoints = user.pointSopan + user.pointBersih;
+          if (totalPoints < cost) {
+            return createErrorResponse(`Poin tidak mencukupi. Anda butuh ${cost} poin.`);
+          }
+          if (user.pointSopan >= cost) {
+            user.pointSopan -= cost;
+          } else {
+            const debt = cost - user.pointSopan;
+            user.pointSopan = 0;
+            user.pointBersih = Math.max(0, user.pointBersih - debt);
+          }
+        } else {
+          const studentClass = db.classes.find((c: any) => c.id === user.kelasId);
+          if (!studentClass) return createErrorResponse("Siswa tidak tergabung dalam kelas manapun.", 400);
+
+          const totalClassPoints = studentClass.pointPerilaku + studentClass.pointKebersihan;
+          if (totalClassPoints < cost) return createErrorResponse(`Poin kelas ${studentClass.name} tidak mencukupi.`);
+
+          if (studentClass.pointPerilaku >= cost) {
+            studentClass.pointPerilaku -= cost;
+          } else {
+            const diff = cost - studentClass.pointPerilaku;
+            studentClass.pointPerilaku = 0;
+            studentClass.pointKebersihan = Math.max(0, studentClass.pointKebersihan - diff);
+          }
+        }
+
+        reward.stock -= 1;
+        const newLog = {
+          id: `log_${Date.now()}`,
+          studentId: user.id,
+          studentName: user.name,
+          kelasId: user.kelasId,
+          type: "sopan" as const,
+          points: -cost,
+          description: `Menukar Poin: ${reward.title}`,
+          date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
+          giverName: "Toko Reward",
+          isVerified: true
+        };
+
+        db.logs.unshift(newLog);
+        saveLocalDB(db);
+        return createSuccessResponse({ success: true, user, reward });
+      } catch (e) {
+        return createErrorResponse("Error redeeming reward.");
+      }
+    }
+
+    // 11. POST /api/quiz/submit
+    if (url === "/api/quiz/submit" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        const user = db.users.find((u: any) => u.id === body.userId);
+        const quiz = db.quizzes.find((q: any) => q.id === body.quizId);
+
+        if (!user || !quiz) return createErrorResponse("User atau Kuis tidak ditemukan.", 404);
+
+        if (body.isCorrect) {
+          const pts = quiz.pointsReward;
+          user.pointSopan += pts;
+          
+          const stClass = db.classes.find((c: any) => c.id === user.kelasId);
+          if (stClass) stClass.pointPerilaku += pts;
+
+          db.logs.unshift({
+            id: `log_${Date.now()}`,
+            studentId: user.id,
+            studentName: user.name,
+            kelasId: user.kelasId,
+            type: "etika",
+            points: pts,
+            description: `Menyelesaikan Kuis Etika: "${quiz.question.slice(0, 30)}..."`,
+            date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
+            giverName: "Kuis Karakter",
+            isVerified: true
+          });
+
+          saveLocalDB(db);
+          return createSuccessResponse({ success: true, user, message: `Bagus sekali! Jawaban Anda benar. Anda mendapatkan +${pts} Poin Sopan!` });
+        } else {
+          return createSuccessResponse({ success: false, message: "Jawaban Anda kurang tepat. Silahkan baca kembali nasehat materi etika dan coba lagi." });
+        }
+      } catch (e) {
+        return createErrorResponse("Error submitting quiz.");
+      }
+    }
+
+    // 12. POST /api/ai/advice
+    if (url === "/api/ai/advice" && init?.method === "POST") {
+      try {
+        const body = JSON.parse(init.body as string);
+        return createSuccessResponse({
+          advice: `Pendidikan Karakter (${body.category || "Utama"}): Saling menyapa dengan senyum tulus, menghargai sesama teman sebangku, serta menjaga kebiasaan luhur adalah kunci membentuk budaya sekolah ramah anak. Mari penuhi hari ini dengan kebaikan yang ikhlas.`
+        });
+      } catch (e) {
+        return createSuccessResponse({
+          advice: "Saling menyapa dengan senyum tulus, menghargai sesama teman sebangku, serta menjaga kebiasaan luhur adalah kunci membentuk budaya sekolah ramah anak."
+        });
+      }
+    }
+  }
+
+  return originalFetch(input, init);
+};
+
 export default function App() {
   // Authentication states
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -157,7 +876,7 @@ export default function App() {
     setProfileErrorMsg('');
     setProfileSuccessMsg('');
     try {
-      const response = await fetch('/api/profile/update', {
+      const response = await safeFetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -204,7 +923,7 @@ export default function App() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('/api/data');
+      const res = await safeFetch('/api/data');
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users || []);
@@ -247,7 +966,7 @@ export default function App() {
     setAuthError('');
     setIsLoggingIn(true);
     try {
-      const response = await fetch('/api/login', {
+      const response = await safeFetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput, password: passwordInput })
@@ -277,7 +996,7 @@ export default function App() {
   const handlePeerAppreciationSubmit = async (targetStudentId: string, description: string): Promise<boolean> => {
     if (!currentUser) return false;
     try {
-      const response = await fetch('/api/logs/apresiasi', {
+      const response = await safeFetch('/api/logs/apresiasi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -302,7 +1021,7 @@ export default function App() {
   const handleBkGivePoints = async (studentId: string, type: 'sopan' | 'bersih', points: number, description: string): Promise<boolean> => {
     if (!currentUser) return false;
     try {
-      const res = await fetch('/api/points/add', {
+      const res = await safeFetch('/api/points/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -327,7 +1046,7 @@ export default function App() {
   // BK - Verify peer approval
   const handleVerifyLog = async (logId: string, isApproved: boolean) => {
     try {
-      const res = await fetch('/api/logs/verify', {
+      const res = await safeFetch('/api/logs/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ logId, isApproved })
@@ -343,7 +1062,7 @@ export default function App() {
   // Admin - Add Class
   const handleAddClass = async (name: string, waliKelasName: string): Promise<boolean> => {
     try {
-      const res = await fetch('/api/classes/add', {
+      const res = await safeFetch('/api/classes/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, waliKelasName })
@@ -362,7 +1081,7 @@ export default function App() {
   // Admin - Add Student User
   const handleAddStudent = async (username: string, name: string, role: UserRole, kelasId: string, password = '123', bio = ''): Promise<boolean> => {
     try {
-      const res = await fetch('/api/students/add', {
+      const res = await safeFetch('/api/students/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, name, role, kelasId, password, bio })
@@ -382,7 +1101,7 @@ export default function App() {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) return;
     try {
-      const res = await fetch('/api/students/delete', {
+      const res = await safeFetch('/api/students/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: userId })
@@ -399,7 +1118,7 @@ export default function App() {
   const handleRedeemReward = async (rewardId: string): Promise<boolean> => {
     if (!currentUser) return false;
     try {
-      const res = await fetch('/api/rewards/redeem', {
+      const res = await safeFetch('/api/rewards/redeem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUser.id, rewardId })
@@ -957,7 +1676,7 @@ export default function App() {
                       </div>
 
                       <div className="lg:col-span-5">
-                        <AiConsultant currentUser={currentUser} />
+                        <AiConsultant currentUser={currentUser} apiCall={safeFetch} />
                       </div>
                     </div>
                   )}
@@ -968,6 +1687,7 @@ export default function App() {
                       quizList={quizList}
                       currentUser={currentUser}
                       onQuizSuccess={fetchData}
+                      apiCall={safeFetch}
                     />
                   )}
 

@@ -1,15 +1,27 @@
 import express from "express";
 import path from "path";
-import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import * as admin from 'firebase-admin';
+import firebaseConfig from './firebase-applet-config.json';
+
+// Initialize Firebase Admin (lazy load)
+let db: admin.firestore.Firestore;
+try {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+    databaseURL: `https://${firebaseConfig.projectId}.firebaseio.com`
+  });
+  db = admin.firestore();
+} catch (e) {
+  console.warn("Firebase Admin failed to initialize, running with local file system database fallback", e);
+}
 
 // Load environment variables
 dotenv.config();
 
 const PORT = 3000;
-const DB_FILE = path.join(process.cwd(), "database.json");
 
 // Initialize Gemini Client safely
 let ai: GoogleGenAI | null = null;

@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user (student/teacher/admin)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "kelasId": { "type": "string" }
+      }
+    },
+    "Log": {
+      "title": "Log",
+      "description": "Character building activity log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "type": { "type": "string" },
+        "points": { "type": "number" },
+        "isVerified": { "type": "boolean" }
+      }
+    },
+    "Class": {
+      "title": "Class",
+      "description": "School class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Users collection"
+    },
+    "/logs/{logId}": {
+      "schema": "Log",
+      "description": "Logs collection"
+    },
+    "/classes/{classId}": {
+      "schema": "Class",
+      "description": "Classes collection"
+    }
+  }
+}

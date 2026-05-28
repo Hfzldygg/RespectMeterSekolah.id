@@ -6,9 +6,10 @@ interface CharacterQuizProps {
   quizList: QuizQuestion[];
   currentUser: User;
   onQuizSuccess: () => void;
+  apiCall: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
 
-export default function CharacterQuiz({ quizList, currentUser, onQuizSuccess }: CharacterQuizProps) {
+export default function CharacterQuiz({ quizList, currentUser, onQuizSuccess, apiCall }: CharacterQuizProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [status, setStatus] = useState<'idle' | 'submitted'>('idle');
@@ -32,7 +33,7 @@ export default function CharacterQuiz({ quizList, currentUser, onQuizSuccess }: 
 
     const checkCorrect = selectedOption === activeQuiz.correctAnswerIndex;
     try {
-      const res = await fetch('/api/quiz/submit', {
+      const res = await apiCall('/api/quiz/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

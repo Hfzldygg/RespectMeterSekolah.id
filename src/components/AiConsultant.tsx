@@ -3,9 +3,10 @@ import { Sparkles, MessageSquare, ShieldAlert } from 'lucide-react';
 
 interface AiConsultantProps {
   currentUser: { name: string; id: string };
+  apiCall: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
 
-export default function AiConsultant({ currentUser }: AiConsultantProps) {
+export default function AiConsultant({ currentUser, apiCall }: AiConsultantProps) {
   const [category, setCategory] = useState('Sopan Santun');
   const [topic, setTopic] = useState('');
   const [advice, setAdvice] = useState('');
@@ -15,7 +16,7 @@ export default function AiConsultant({ currentUser }: AiConsultantProps) {
     setIsLoading(true);
     setAdvice('');
     try {
-      const res = await fetch('/api/ai/advice', {
+      const res = await apiCall('/api/ai/advice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, customTopic: topic }),
